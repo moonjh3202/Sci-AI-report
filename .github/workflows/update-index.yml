@@ -1,0 +1,40 @@
+name: Update briefs index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'briefs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Regenerate index.md
+        run: |
+          {
+            echo "# Sci-AI-report"
+            echo ""
+            echo "과학기술·AI 약한 신호 일일 브리프 아카이브"
+            echo ""
+            echo "## 브리프 목록"
+            echo ""
+            for f in $(ls briefs/*.md | sort -r); do
+              name=$(basename "$f" .md)
+              echo "- [$name]($f)"
+            done
+          } > index.md
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.md
+          git diff --cached --quiet || git commit -m "chore: 브리프 목록 자동 갱신"
+          git push
